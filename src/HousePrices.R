@@ -25,7 +25,7 @@ hist(data$households, main = "households", col="slateblue1", breaks = 60)
 hist(data$median_income, main = "median_income", col="slateblue1", breaks = 60)
 hist(data$median_house_value, main = "median_house_value", col="slateblue1", breaks = 60)
 barplot(height=c(9136, 6551, 5, 2290, 2658),names.arg=c("<1H OCEAN","INLAND","ISLAND",
-        "NEAR BAY", "NEAR OCEAN"), main="ocean_proximity", col="slateblue1")
+                                                        "NEAR BAY", "NEAR OCEAN"), main="ocean_proximity", col="slateblue1")
 
 # Box-plots
 par(mfrow = c(2, 5))
@@ -72,3 +72,35 @@ mad(data[,"population"], constant = 1)
 mad(data[,"households"], constant = 1)
 mad(data[,"median_income"], constant = 1)
 mad(data[,"median_house_value"], constant = 1)
+
+
+# ------------------------------------------------------------------------------
+# Cleaning data
+# Create helper variables (easier to decide if value is possible)
+data$people_per_household = data$population/data$households
+data$rooms_per_person = data$total_rooms/data$population
+
+# Add variable which contains two other and drop the others (Multikollinearität)
+data$beds_per_room = data$total_bedrooms/data$total_rooms
+
+# Remove improbable records
+data<-data[!(data$median_house_value>=500001),]
+data<-data[!(data$housing_median_age>=52),]
+data<-data[!(data$median_income>=15.0001),]
+data<-data[!(data$beds_per_room>1),]
+
+# Export data -> easier to handle outliers
+library("xlsx")
+write.xlsx2(data, file = "/Users/timstaudinger/Desktop/Repository.nosync/MachineLearning-Exam/dataset/housing_new.xlsx",
+            sheetName = "Sheet1", append = FALSE, row.names = TRUE)
+
+# Import cleaned data set and check if everything correct
+setwd("/Users/timstaudinger/Desktop/Repository.nosync/MachineLearning-Exam/dataset")
+data <- read.csv2("housing_cleaned.csv",header=TRUE,sep=";",fill=TRUE,stringsAsFactors=TRUE)
+data[1:5,]
+summary(data)
+
+# Remove (helper-) variables
+drops = c('total_bedrooms', 'total_rooms', 'people_per_household', 'rooms_per_person', 'X')
+data = data[ , !(names(data) %in% drops)]
+summary(data)
